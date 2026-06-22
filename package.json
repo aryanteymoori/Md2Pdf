@@ -1,0 +1,13 @@
+{
+  "name": "docs-pdf",
+  "version": "1.0.0",
+  "description": "Convert API-Document.md to RTL PDF with Persian font",
+  "main": "convert.js",
+  "scripts": {
+    "convert": "node convert.js"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0",
+    "puppeteer-core": "^24.0.0"
+  }
+}
