@@ -5,8 +5,34 @@ const puppeteer = require('puppeteer-core');
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
-const MD_PATH = path.resolve(__dirname, '..', 'API-Document.md');
-const PDF_PATH = path.resolve(__dirname, 'API-Document-v2.pdf');
+const args = process.argv.slice(2);
+if (args.length < 1) {
+  console.log('Usage: node convert.js <path-to-markdown-file>');
+  console.log('Example: node convert.js ../API-Document.md');
+  console.log('Example: node convert.js C:\\Users\\AsusIran\\Desktop\\doc.md');
+  process.exit(0);
+}
+
+const MD_PATH = path.resolve(args[0]);
+
+if (!fs.existsSync(MD_PATH)) {
+  console.error(`Error: File not found: ${MD_PATH}`);
+  process.exit(1);
+}
+
+const stat = fs.statSync(MD_PATH);
+if (!stat.isFile()) {
+  console.error(`Error: "${MD_PATH}" is a directory, not a file.\nPlease provide a path to a .md file.`);
+  process.exit(1);
+}
+
+const parsed = path.parse(MD_PATH);
+if (parsed.ext.toLowerCase() !== '.md') {
+  console.error(`Error: "${MD_PATH}" is not a .md file.`);
+  process.exit(1);
+}
+
+const PDF_PATH = path.join(parsed.dir, parsed.name + '.pdf');
 
 const md = new MarkdownIt({
   html: true,
