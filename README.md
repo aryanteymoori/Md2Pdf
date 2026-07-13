@@ -1,17 +1,16 @@
-# Md2Pdf
+# Md2Pdf / Universal Converter
 
-A simple Node.js tool to convert Markdown files to beautifully styled PDF with **RTL support** and **Persian/Vazirmatn font**.
+A unified Node.js tool that converts **Markdown ↔ PDF** and **Office files (Word, Excel, PowerPoint, PDF) → Markdown**.
 
 ---
 
 ## Features
 
-- Convert any `.md` file to PDF
-- RTL (Right-to-Left) support for Persian/Arabic content
-- Beautiful styling with Vazirmatn font
+- Convert any `.md` file to beautifully styled RTL PDF (Persian/Arabic support)
+- Convert `.pdf`, `.docx`, `.doc`, `.xlsx`, `.xls`, `.pptx` files to Markdown
+- Batch convert entire folders (with recursive option)
+- RTL support with Vazirmatn font for PDF output
 - Page numbers in footer
-- Table of contents friendly
-- Syntax highlighted code blocks
 - Cross-platform (Windows, macOS, Linux)
 
 ---
@@ -19,7 +18,7 @@ A simple Node.js tool to convert Markdown files to beautifully styled PDF with *
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v14 or higher)
-- [Google Chrome](https://www.google.com/chrome/) installed in default location
+- [Google Chrome](https://www.google.com/chrome/) installed in default location (for MD → PDF)
 - npm packages:
 
 ```bash
@@ -30,18 +29,49 @@ npm install
 
 ## Usage
 
-### Direct
-
-```bash
-node convert.js <path-to-markdown-file>
+```
+node convert.js <input-path> [options]
 ```
 
-Examples:
+### Options
 
+| Option | Description |
+|--------|-------------|
+| `-o, --output <path>` | Output file or folder path |
+| `-r, --recursive` | Process subdirectories recursively (folder mode) |
+
+### Examples
+
+**Markdown → PDF:**
 ```bash
 node convert.js document.md
-node convert.js ../docs/README.md
-node convert.js C:\Users\Me\Documents\article.md
+node convert.js document.md -o output.pdf
+```
+
+**PDF → Markdown:**
+```bash
+node convert.js document.pdf
+```
+
+**Word → Markdown:**
+```bash
+node convert.js report.docx
+```
+
+**Excel → Markdown:**
+```bash
+node convert.js data.xlsx
+```
+
+**PowerPoint → Markdown:**
+```bash
+node convert.js slides.pptx
+```
+
+**Batch convert folder:**
+```bash
+node convert.js ./docs -o ./output
+node convert.js ./docs -o ./output -r
 ```
 
 ### Using `md2pdf` command (Windows)
@@ -50,22 +80,25 @@ Add the project folder to your `PATH`, then:
 
 ```bash
 md2pdf document.md
-```
-
-The output PDF will be created in the **same directory** as the input file, with the same name and `.pdf` extension.
-
----
-
-## Example
-
-```bash
-node convert.js API-Document.md
-# Output: API-Document.pdf
+md2pdf document.docx
+md2pdf ./docs -o ./output -r
 ```
 
 ---
 
-## Configuration
+## Supported formats
+
+| Input | Output |
+|-------|--------|
+| `.md` | `.pdf` |
+| `.pdf` | `.md` |
+| `.docx`, `.doc` | `.md` |
+| `.xlsx`, `.xls` | `.md` |
+| `.pptx` | `.md` |
+
+---
+
+## Configuration (MD → PDF)
 
 Edit `convert.js` to customize:
 
@@ -79,92 +112,5 @@ Edit `convert.js` to customize:
 ---
 
 ## License
-
-MIT
-
----
-
----
-
-# فارسی
-
-یک ابزار ساده Node.js برای تبدیل فایل‌های Markdown به PDF با **پشتیبانی از راست‌چین** و **فونت وزیرمتن**.
-
----
-
-## قابلیت‌ها
-
-- تبدیل هر فایل `.md` به PDF
-- پشتیبانی کامل از نوشتار راست‌چین (فارسی/عربی)
-- استایل زیبا با فونت وزیرمتن
-- شماره صفحه در فوتر
-- نمایش مناسب کدها
-- قابل اجرا در ویندوز، مک و لینوکس
-
----
-
-## پیش‌نیازها
-
-- [Node.js](https://nodejs.org/) نسخه ۱۴ یا بالاتر
-- [Google Chrome](https://www.google.com/chrome/) در مسیر پیش‌فرض نصب شده باشد
-- نصب پکیج‌ها:
-
-```bash
-npm install
-```
-
----
-
-## نحوه استفاده
-
-### مستقیم
-
-```bash
-node convert.js <مسیر-فایل-markdown>
-```
-
-مثال‌ها:
-
-```bash
-node convert.js document.md
-node convert.js ../docs/README.md
-node convert.js C:\Users\Me\Documents\article.md
-```
-
-### با دستور `md2pdf` (ویندوز)
-
-پوشه پروژه رو به `PATH` ویندوز اضافه کنید، سپس:
-
-```bash
-md2pdf document.md
-```
-
-فایل PDF خروجی در **همان پوشه** فایل ورودی ساخته می‌شود، با همان نام و پسوند `.pdf`.
-
----
-
-## مثال
-
-```bash
-node convert.js API-Document.md
-# خروجی: API-Document.pdf
-```
-
----
-
-## تنظیمات
-
-با ویرایش `convert.js` می‌توانید تنظیمات را تغییر دهید:
-
-| تنظیم | مکان | توضیحات |
-|-------|------|---------|
-| مسیر کروم | `CHROME_PATH` | آدرس اجرایی Chrome |
-| اندازه کاغذ | گزینه‌های `page.pdf()` | A4، Letter و ... |
-| حاشیه‌ها | گزینه‌های `page.pdf()` | بالا، پایین، چپ، راست |
-| فونت | CSS `@font-face` | تغییر یا حذف فونت |
-
----
-
-## مجوز
 
 MIT

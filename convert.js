@@ -1,38 +1,13 @@
 const fs = require('fs');
 const path = require('path');
+const { program } = require('commander');
 const MarkdownIt = require('markdown-it');
 const puppeteer = require('puppeteer-core');
+const { convertFile: convertToMd, convertFolder, SUPPORTED } = require('./converters');
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
-const args = process.argv.slice(2);
-if (args.length < 1) {
-  console.log('Usage: node convert.js <path-to-markdown-file>');
-  console.log('Example: node convert.js ../API-Document.md');
-  console.log('Example: node convert.js C:\\Users\\AsusIran\\Desktop\\doc.md');
-  process.exit(0);
-}
-
-const MD_PATH = path.resolve(args[0]);
-
-if (!fs.existsSync(MD_PATH)) {
-  console.error(`Error: File not found: ${MD_PATH}`);
-  process.exit(1);
-}
-
-const stat = fs.statSync(MD_PATH);
-if (!stat.isFile()) {
-  console.error(`Error: "${MD_PATH}" is a directory, not a file.\nPlease provide a path to a .md file.`);
-  process.exit(1);
-}
-
-const parsed = path.parse(MD_PATH);
-if (parsed.ext.toLowerCase() !== '.md') {
-  console.error(`Error: "${MD_PATH}" is not a .md file.`);
-  process.exit(1);
-}
-
-const PDF_PATH = path.join(parsed.dir, parsed.name + '.pdf');
+const EXT_TO_MD = Object.keys(SUPPORTED);
 
 const md = new MarkdownIt({
   html: true,
@@ -148,10 +123,12 @@ ${bodyHtml}
 </html>`;
 }
 
-async function main() {
-  const markdown = fs.readFileSync(MD_PATH, 'utf-8');
+async function mdToPdf(mdPath, outputPath) {
+  const markdown = fs.readFileSync(mdPath, 'utf-8');
   const bodyHtml = md.render(markdown);
   const html = buildHtml(bodyHtml);
+
+  const pdfPath = outputPath || path.join(path.dirname(mdPath), path.basename(mdPath, '.md') + '.pdf');
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -164,7 +141,7 @@ async function main() {
     await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
 
     await page.pdf({
-      path: PDF_PATH,
+      path: pdfPath,
       format: 'A4',
       margin: { top: '15mm', bottom: '15mm', right: '15mm', left: '15mm' },
       printBackground: true,
@@ -177,13 +154,53 @@ async function main() {
         </div>`
     });
 
-    console.log(`PDF created: ${PDF_PATH}`);
+    console.log(`PDF created: ${pdfPath}`);
   } finally {
     await browser.close();
   }
 }
 
-main().catch(err => {
-  console.error('Error:', err.message);
-  process.exit(1);
-});
+// ── CLI setup ─────────────────────────────────────────
+program
+  .name('convert')
+  .description('Convert Markdown <-> PDF and Office files (PDF/Word/Excel/PowerPoint) to Markdown')
+  .version('1.0.0');
+
+program
+  .argument('<input>', 'Input file or folder path')
+  .option('-o, --output <path>', 'Output file or folder path')
+  .option('-r, --recursive', 'Process subdirectories recursively (folder mode only)')
+  .action(async (input, options) => {
+    try {
+      const inputPath = path.resolve(input);
+      const stats = fs.statSync(inputPath);
+      const ext = path.extname(inputPath).toLowerCase();
+
+      if (stats.isDirectory()) {
+        const outDir = options.output ? path.resolve(options.output) : inputPath;
+        const results = await convertFolder(inputPath, outDir, !!options.recursive);
+        if (results.length) {
+          console.log(`\nConverted ${results.length} file(s) to Markdown.`);
+          results.forEach(r => console.log(`   ${r.input}  →  ${r.output}`));
+        } else {
+          console.log('No supported files found in the folder.');
+        }
+        return;
+      }
+
+      if (ext === '.md') {
+        await mdToPdf(inputPath, options.output ? path.resolve(options.output) : null);
+      } else if (EXT_TO_MD.includes(ext)) {
+        const result = await convertToMd(inputPath, options.output ? path.resolve(options.output) : null);
+        console.log(`\nMarkdown created: ${result.output}`);
+      } else {
+        console.error(`\nUnsupported format: "${ext}".\nSupported:\n  .md  → PDF\n${EXT_TO_MD.join(', ')}  → Markdown`);
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error(`\nError: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+program.parse(process.argv);
